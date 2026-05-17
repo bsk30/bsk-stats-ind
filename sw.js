@@ -1,5 +1,13 @@
-const CACHE = 'bskt-ind-v2';
-const ASSETS = ['/', '/index.html', '/chart.min.js', '/manifest.json', '/icon-192.png', '/icon-512.png'];
+const CACHE = 'bskt-ind-v3';
+
+const ASSETS = [
+  './',
+  './index.html',
+  './chart.min.js',
+  './manifest.json',
+  './icon-192.png',
+  './icon-512.png'
+];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
