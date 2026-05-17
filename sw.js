@@ -1,4 +1,4 @@
-const CACHE = 'bskt-ind-v3';
+const CACHE = 'bskt-ind-v4';
 
 const ASSETS = [
   './',
