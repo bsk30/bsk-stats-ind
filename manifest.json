@@ -1,0 +1,14 @@
+{
+  "name": "個人バスケスタッツ",
+  "short_name": "個人スタッツ",
+  "description": "バスケットボール個人スタッツ記録アプリ",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#EEF2FF",
+  "theme_color": "#1e40af",
+  "lang": "ja",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

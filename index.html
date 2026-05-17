@@ -1,0 +1,1855 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>個人バスケスタッツ</title>
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="個人スタッツ">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="theme-color" content="#1e40af">
+<style>
+/* ── Reset / Base ── */
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,'Hiragino Sans','Noto Sans JP',sans-serif;background:#EEF2FF;color:#1e293b;min-height:100vh;padding-bottom:calc(72px + env(safe-area-inset-bottom,0px))}
+
+/* ── App Header ── */
+.app-hdr{background:linear-gradient(135deg,#1e40af,#3b82f6);color:#fff;padding:12px 16px;position:sticky;top:0;z-index:100;box-shadow:0 2px 10px rgba(0,0,0,.25);text-align:center}
+.app-hdr-title{font-size:17px;font-weight:bold}
+.app-hdr-sub{font-size:11px;opacity:.8;margin-top:2px}
+
+/* ── Bottom Nav ── */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#fff;display:flex;border-top:1px solid #E2E8F0;z-index:100;box-shadow:0 -2px 8px rgba(0,0,0,.08);padding-bottom:env(safe-area-inset-bottom,0px)}
+.nbtn{flex:1;display:flex;flex-direction:column;align-items:center;padding:10px 4px 8px;background:none;border:none;color:#94A3B8;font-size:11px;cursor:pointer;gap:3px;-webkit-tap-highlight-color:transparent}
+.nbtn.active{color:#1e40af}
+.nicon{font-size:22px}
+
+/* ── Views ── */
+.view{display:none;padding:10px}
+.view.active{display:block}
+
+/* ── Stat chips ── */
+.stat-chips{display:flex;gap:8px;margin-bottom:10px}
+.stat-chip{flex:1;background:#fff;border-radius:12px;padding:10px 6px;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,.07)}
+.chip-val{font-size:19px;font-weight:bold;color:#1e40af;line-height:1.1}
+.chip-lbl{font-size:10px;color:#94A3B8;margin-top:3px;font-weight:bold}
+
+/* ── Cards ── */
+.card{background:#fff;border-radius:14px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,.07);margin-bottom:10px}
+.card-title{font-size:14px;font-weight:bold;color:#374151;margin-bottom:10px}
+
+/* ── Add Game Card ── */
+.add-game-card{background:linear-gradient(135deg,#1e40af,#3b82f6);border-radius:16px;padding:16px 20px;display:flex;align-items:center;gap:14px;cursor:pointer;margin-bottom:12px;box-shadow:0 4px 16px rgba(30,64,175,.3);-webkit-tap-highlight-color:transparent}
+.add-game-card:active{opacity:.88}
+.add-game-icon{font-size:32px;flex-shrink:0;background:rgba(255,255,255,.18);border-radius:50%;width:52px;height:52px;display:flex;align-items:center;justify-content:center}
+.add-game-title{font-size:16px;font-weight:bold;color:#fff}
+.add-game-sub{font-size:12px;color:rgba(255,255,255,.8);margin-top:3px}
+
+/* ── Section header ── */
+.sec-hdr{display:flex;align-items:center;gap:8px;margin:4px 0 8px}
+.sec-hdr-line{flex:1;height:1px;background:#CBD5E1}
+.sec-hdr-txt{font-size:11px;font-weight:bold;color:#94A3B8;white-space:nowrap}
+
+/* ── Game cards ── */
+.gcard{background:#fff;border-radius:14px;box-shadow:0 2px 8px rgba(0,0,0,.07);overflow:hidden;margin-bottom:8px}
+.ghead{padding:12px 14px;display:flex;align-items:center;gap:8px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.gdate{font-size:12px;color:#94A3B8;min-width:64px}
+.gopp{flex:1;font-size:15px;font-weight:bold}
+.gpts{font-size:18px;font-weight:bold;color:#1e40af;min-width:32px;text-align:center}
+.gpts-lbl{font-size:10px;color:#94A3B8;text-align:center}
+.badge{font-size:11px;font-weight:bold;padding:2px 8px;border-radius:6px}
+.bwin{background:#DCFCE7;color:#166534}
+.blose{background:#FEE2E2;color:#991B1B}
+.bdraw{background:#FEF9C3;color:#854D0E}
+.editbtn{background:none;border:none;font-size:17px;cursor:pointer;padding:4px;color:#94A3B8;-webkit-tap-highlight-color:transparent}
+.gdetail{display:none;padding:10px 14px;border-top:1px solid #EEF2FF;background:#F8FAFF}
+.gdetail.open{display:block}
+.gd-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.gd-chip{background:#fff;border-radius:8px;padding:5px 10px;font-size:12px;box-shadow:0 1px 3px rgba(0,0,0,.07)}
+.gd-chip b{font-size:15px;color:#1e40af;display:block}
+.gd-chip span{font-size:10px;color:#94A3B8;font-weight:bold}
+.stabtn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:#1e40af;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:bold;cursor:pointer;-webkit-tap-highlight-color:transparent;margin-top:4px}
+.stabtn:active{background:#1e3a8a}
+
+/* ── Guide card ── */
+.guide-card{background:#fff;border-radius:16px;padding:28px 20px 24px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.07)}
+.guide-icon{font-size:56px;margin-bottom:10px}
+.guide-title{font-size:17px;font-weight:bold;margin-bottom:20px}
+.guide-btn{display:block;width:100%;padding:15px;background:linear-gradient(135deg,#1e40af,#3b82f6);color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:bold;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.guide-btn:active{opacity:.88}
+
+/* ── Analysis ── */
+.analysis-tabs{display:flex;gap:0;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,.07);margin-bottom:10px}
+.atab{flex:1;padding:10px;border:none;font-size:13px;font-weight:bold;cursor:pointer;background:#fff;color:#94A3B8;border-bottom:3px solid transparent;-webkit-tap-highlight-color:transparent;transition:all .15s}
+.atab.active{color:#1e40af;border-bottom-color:#1e40af}
+.apanel{display:none}
+.apanel.active{display:block}
+.chart-card{background:#fff;border-radius:14px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,.07);margin-bottom:10px}
+.chart-title{font-size:13px;font-weight:bold;color:#374151;margin-bottom:8px}
+.carea{position:relative;height:200px}
+.cbtn-row{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap}
+.cbtn{padding:3px 10px;font-size:11px;font-weight:bold;border:1.5px solid #CBD5E1;border-radius:20px;background:#fff;color:#64748B;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.cbtn.active{background:#1e40af;border-color:#1e40af;color:#fff}
+.no-data{padding:16px;text-align:center;font-size:13px;color:#94A3B8}
+
+/* ── Shot chart ── */
+.scht-sel-row{display:flex;gap:6px;flex-wrap:wrap;padding:4px 0 8px}
+.scht-wrap{max-width:420px;margin:0 auto}
+.scht-wrap svg{width:100%;height:auto;display:block;border-radius:8px}
+.scht-legend{display:flex;gap:14px;padding:6px 0;font-size:12px;color:#64748B;align-items:center}
+.scht-pct{font-size:13px;font-weight:bold;color:#374151;padding:4px 0 8px}
+
+/* ── Stats table ── */
+.stbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.stbl{width:100%;border-collapse:collapse;font-size:12px;min-width:480px}
+.stbl th{background:#EDF1F7;padding:6px 5px;font-size:11px;color:#555;text-align:center;white-space:nowrap;border-bottom:1px solid #ddd}
+.stbl td{padding:7px 5px;text-align:center;border-bottom:1px solid #eee;white-space:nowrap}
+.stbl .pct{color:#1a5fb4}
+
+/* ── Settings ── */
+.fg{margin-bottom:11px}
+.flabel{font-size:12px;color:#64748B;margin-bottom:4px;display:block;font-weight:bold}
+.finput{width:100%;padding:10px;border:1.5px solid #E2E8F0;border-radius:10px;font-size:14px;font-family:inherit}
+.finput:focus{outline:none;border-color:#3b82f6}
+.btn{display:inline-block;padding:10px 16px;border-radius:10px;font-size:13px;font-weight:bold;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.btn-p{background:#1e40af;color:#fff}.btn-p:active{background:#1e3a8a}
+.btn-s{background:#E2E8F0;color:#475569}.btn-s:active{background:#CBD5E1}
+.btn-d{background:#FEE2E2;color:#991B1B}
+.btn-full{width:100%;text-align:center;padding:12px}
+.brow{display:flex;gap:8px}
+
+/* ── Modals ── */
+.modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 10px 80px}
+/* 記録終了モーダルは記録ビュー(z:300)より上に表示 */
+#mClose{z-index:400}
+.modal-ov.open{display:flex;align-items:flex-start;justify-content:center}
+.modal{background:#fff;border-radius:18px;width:100%;max-width:500px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.3)}
+.mhead{background:linear-gradient(135deg,#1e40af,#3b82f6);color:#fff;padding:14px 16px;display:flex;align-items:center;justify-content:space-between}
+.mtitle{font-size:16px;font-weight:bold}
+.mclose{background:rgba(255,255,255,.22);border:none;border-radius:6px;color:#fff;width:30px;height:30px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.mbody{padding:16px}
+.mfooter{padding:12px 16px;border-top:1px solid #E2E8F0;display:flex;gap:8px;align-items:center}
+.spacer{flex:1}
+
+/* ════════════════
+   全画面 記録ビュー
+   ════════════════ */
+.rec-view{position:fixed;inset:0;z-index:300;background:#111827;display:none;flex-direction:column;overflow:hidden}
+.rec-view.active{display:flex}
+
+/* 記録ヘッダ */
+.rec-hd{background:linear-gradient(135deg,#1e40af,#3b82f6);color:#fff;padding:7px 10px;flex-shrink:0;display:flex;align-items:center;gap:8px}
+.rec-back{background:rgba(255,255,255,.22);border:none;border-radius:8px;color:#fff;padding:5px 10px;font-size:13px;font-weight:bold;cursor:pointer;-webkit-tap-highlight-color:transparent;white-space:nowrap}
+.rec-back:active{background:rgba(255,255,255,.38)}
+.rec-endbtn{background:rgba(255,255,255,.35)}
+.rec-ginfo{flex:1;min-width:0}
+.rec-gtitle{font-size:13px;font-weight:bold;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rec-gscore{font-size:10px;opacity:.8;margin-top:1px}
+
+/* スタッツバー（横スクロール対応・1行） */
+.rec-statsbar{background:#1e3a8a;padding:4px 8px;flex-shrink:0;display:flex;gap:4px;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.rec-statsbar::-webkit-scrollbar{display:none}
+.rsb-chip{background:rgba(255,255,255,.12);border-radius:7px;padding:2px 6px;text-align:center;min-width:36px;flex-shrink:0}
+.rsb-val{font-size:12px;font-weight:bold;color:#fff;line-height:1.1}
+.rsb-lbl{font-size:8px;color:rgba(255,255,255,.6);font-weight:bold}
+
+/* コート＋ボタン エリア（スクロールなし・flex縦） */
+.rec-body{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden;padding:4px 6px 6px;gap:4px}
+
+/* コートSVG：縦横比300:270を保ちながら画面いっぱいに表示 */
+/* 縦長端末→幅いっぱい、横長端末→高さで制約 */
+.court-wrap{
+  width:100%;
+  aspect-ratio:300/270;
+  max-height:calc(100vh - 215px);
+  max-height:calc(100dvh - 215px);
+  max-width:min(100%, calc((100vh - 215px) * 300 / 270));
+  max-width:min(100%, calc((100dvh - 215px) * 300 / 270));
+  margin:0 auto;
+  border-radius:10px;
+  overflow:hidden;
+  box-shadow:0 4px 20px rgba(0,0,0,.4);
+  flex-shrink:0;
+}
+.court-wrap svg{width:100%;height:100%;display:block;touch-action:none;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+
+/* アクションボタン（2行×5列・テキストのみ） */
+.action-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;flex-shrink:0}
+.act-btn{padding:7px 2px;border-radius:8px;font-size:12px;font-weight:bold;border:none;cursor:pointer;text-align:center;line-height:1.35;word-break:break-all;box-shadow:0 1px 3px rgba(0,0,0,.12);-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.act-btn:active{opacity:.6;transform:scale(.93)}
+.ab-oreb{background:#FEF9C3;color:#854D0E}
+.ab-dreb{background:#EFF6FF;color:#1D4ED8}
+.ab-ast{background:#D1FAE5;color:#065F46}
+.ab-stl{background:#F5F3FF;color:#5B21B6}
+.ab-blk{background:#FFF7ED;color:#C2410C}
+.ab-tov{background:#FEE2E2;color:#991B1B}
+.ab-foul{background:#FFE4E6;color:#BE123C}
+.ab-ftm{background:#DCFCE7;color:#166534}
+.ab-ftx{background:#FEE2E2;color:#B91C1C}
+.ab-undo{background:#F1F5F9;color:#64748B}
+
+/* コートヒント */
+.court-hint{flex-shrink:0;text-align:center;font-size:10px;color:rgba(255,255,255,.45);padding:1px 0}
+
+/* ════════════════
+   シュートポップアップ
+   ════════════════ */
+.sp-ov{position:fixed;inset:0;z-index:500;display:none}
+.sp-ov.open{display:block}
+.sp-box{position:fixed;background:#fff;border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,.4);padding:14px;min-width:200px;max-width:240px;z-index:501}
+.sp-zone{text-align:center;margin-bottom:10px}
+.sp-zone b{font-size:13px;font-weight:bold;padding:3px 12px;border-radius:8px;display:inline-block}
+.sp-zone-2p{background:#F0FDF4;color:#166534}
+.sp-zone-3p{background:#DBEAFE;color:#1D4ED8}
+.sp-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.sp-btn{padding:16px 4px;border:none;border-radius:10px;font-size:14px;font-weight:bold;cursor:pointer;-webkit-tap-highlight-color:transparent;line-height:1.2}
+.sp-btn:active{opacity:.75}
+.sp-made{background:#DCFCE7;color:#166534;font-size:18px}
+.sp-miss{background:#FEE2E2;color:#991B1B;font-size:18px}
+.sp-cancel{width:100%;padding:10px;border:none;border-radius:10px;background:#F1F5F9;color:#64748B;font-size:13px;font-weight:bold;cursor:pointer;-webkit-tap-highlight-color:transparent}
+
+/* ── 略語注釈（設定タブ内） ── */
+.abbrv-box{font-size:11px;color:#64748B;line-height:1.85;margin-top:4px}
+.abbrv-tit{font-size:12px;font-weight:bold;color:#374151;margin-bottom:6px;margin-top:14px}
+.abbrv-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+.abbrv-grid span b{color:#1e40af;font-family:monospace;font-size:11.5px}
+/* ── 使い方セクション ── */
+.help-sec{border-top:1px solid #F1F5F9;margin-top:14px;padding-top:12px}
+.help-sec:first-child{border-top:none;margin-top:0;padding-top:0}
+.help-sec-title{font-size:13px;font-weight:bold;color:#374151;margin-bottom:8px}
+.help-steps{margin:0;padding-left:18px;font-size:13px;color:#475569;line-height:1.9}
+.help-steps li{margin-bottom:2px}
+.help-note{background:#FEF9C3;border-left:3px solid #D97706;padding:8px 10px;border-radius:0 8px 8px 0;font-size:12px;color:#854D0E;margin-top:8px;line-height:1.7}
+
+/* アニメーション */
+@keyframes flashGreen{0%{background:#BBF7D0}100%{background:inherit}}
+@keyframes flashRed{0%{background:#FECACA}100%{background:inherit}}
+.flash-g{animation:flashGreen 0.3s ease-out}
+.flash-r{animation:flashRed 0.3s ease-out}
+</style>
+</head>
+<body>
+
+<!-- ── App Header ── -->
+<div class="app-hdr">
+  <div class="app-hdr-title" id="appTitle">個人バスケスタッツ</div>
+  <div class="app-hdr-sub" id="appSub"></div>
+</div>
+
+<!-- ── 試合一覧ビュー ── -->
+<div id="view-home" class="view active">
+  <div id="homeContent"></div>
+</div>
+
+<!-- ── 分析ビュー ── -->
+<div id="view-analysis" class="view">
+  <div class="analysis-tabs">
+    <button class="atab active" id="atab-chart" onclick="switchATab('chart')">📈 グラフ</button>
+    <button class="atab" id="atab-shot" onclick="switchATab('shot')">🎯 ショット</button>
+    <button class="atab" id="atab-table" onclick="switchATab('table')">📋 成績表</button>
+  </div>
+  <div id="apanel-chart" class="apanel active"></div>
+  <div id="apanel-shot" class="apanel"></div>
+  <div id="apanel-table" class="apanel"></div>
+</div>
+
+<!-- ── 設定ビュー ── -->
+<div id="view-settings" class="view">
+  <div class="card">
+    <div class="card-title">⚙️ 設定</div>
+    <div class="fg">
+      <label class="flabel">選手名（自分の名前）</label>
+      <input class="finput" id="cfgName" placeholder="例: 山田 太郎">
+    </div>
+    <button class="btn btn-p btn-full" onclick="saveConfig()">保存する</button>
+  </div>
+  <div class="card">
+    <div class="card-title">📤 バックアップ・復元</div>
+    <p style="font-size:13px;color:#64748B;margin-bottom:10px">データはこの端末のみに保存されています。定期的にバックアップをとりましょう。</p>
+    <div class="brow">
+      <button class="btn btn-s" style="flex:1" onclick="exportJson()">💾 バックアップ</button>
+      <label class="btn btn-s" style="flex:1;text-align:center;cursor:pointer">📂 復元
+        <input type="file" accept=".json" onchange="importJson(this)" style="display:none">
+      </label>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">📊 分析レポートを出力</div>
+    <p style="font-size:13px;color:#64748B;margin-bottom:12px">スタッツ・シュートチャート・成功率をまとめたHTMLファイルを保存します。</p>
+    <button class="btn btn-p btn-full" onclick="generateHtml()">📄 レポートHTMLを保存</button>
+  </div>
+  <!-- 略語一覧（独立カード） -->
+  <div class="card">
+    <div class="card-title">📋 略語一覧</div>
+    <div class="abbrv-box">
+      <div class="abbrv-grid">
+        <span><b>2P</b>　2ポイントシュート</span>
+        <span><b>3P</b>　3ポイントシュート</span>
+        <span><b>FT</b>　フリースロー</span>
+        <span><b>FG</b>　フィールドゴール（2P＋3P）</span>
+        <span><b>FGA</b>　FG試投数</span>
+        <span><b>FG%</b>　FG成功率</span>
+        <span><b>2PA</b>　2P試投数</span>
+        <span><b>2P%</b>　2P成功率</span>
+        <span><b>3PA</b>　3P試投数</span>
+        <span><b>3P%</b>　3P成功率</span>
+        <span><b>FTA</b>　FT試投数</span>
+        <span><b>FT%</b>　FT成功率</span>
+        <span style="grid-column:1/-1"><b>TS%</b>　シュート１回あたりの得点効率<br><span style="font-size:11px;color:#64748B;padding-left:1em">得点÷(2×(FGA+0.44×FTA))×100</span></span>
+        <span><b>REB</b>　リバウンド（OR＋DR）</span>
+        <span><b>OR</b>　オフェンスリバウンド</span>
+        <span><b>DR</b>　ディフェンスリバウンド</span>
+        <span><b>AST</b>　アシスト</span>
+        <span><b>STL</b>　スティール</span>
+        <span><b>BLK</b>　ブロック</span>
+        <span><b>TOV</b>　ターンオーバー</span>
+        <span><b>FOUL</b>　ファール</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 使い方 -->
+  <div class="card">
+    <div class="card-title">📖 使い方</div>
+
+    <div class="help-sec">
+      <div class="help-sec-title">アプリの使用準備（ホーム画面への追加）</div>
+      <p style="font-size:13px;color:#475569;margin-bottom:8px">Safariでアプリを開き、ホーム画面に追加するとアプリのように使えます。ホーム画面から起動するとオフライン（インターネット未接続）でも使用できます。</p>
+      <ol class="help-steps">
+        <li>Safariでこのアプリを開く</li>
+        <li>画面下部の共有ボタン（□↑）をタップ</li>
+        <li>「ホーム画面に追加」を選択</li>
+        <li>名前を確認して「追加」をタップ</li>
+      </ol>
+      <p style="font-size:12px;color:#64748B;margin-top:6px">iPadも同じ手順です。</p>
+    </div>
+
+    <div class="help-sec">
+      <div class="help-sec-title">基本的な使い方</div>
+      <ol class="help-steps">
+        <li>設定でプレーヤー名を入力して保存</li>
+        <li>「試合一覧」タブで「＋ 今日の試合を追加」をタップ</li>
+        <li>日付・対戦相手を入力して「記録開始」</li>
+        <li>コートをタップしてシュートを記録（2P/3P・成功/失敗）</li>
+        <li>リバウンド・アシストなどはコートの下のボタンをタップ</li>
+        <li>「記録終了」ボタンで出場時間・スコア・勝敗を入力</li>
+        <li>「分析」タブでグラフ・成績・ショットチャートを確認</li>
+      </ol>
+    </div>
+
+    <div class="help-sec">
+      <div class="help-sec-title">アプリ更新時の手順</div>
+      <p style="font-size:13px;color:#475569;margin-bottom:8px">アップデートがあった場合は、ホーム画面のアイコンを一度削除して追加し直す必要があります。</p>
+      <div class="help-note">
+        ⚠️ <b>削除前に必ずバックアップをとってください。</b><br>削除するとデータが消えます。
+      </div>
+      <ol class="help-steps" style="margin-top:8px">
+        <li>このページの「💾 バックアップ」でデータを保存</li>
+        <li>ホーム画面のアイコンを長押し→「削除」</li>
+        <li>Safariでアプリを開き直す</li>
+        <li>上記の手順でホーム画面に再度追加</li>
+        <li>「📂 復元する」でバックアップを読み込む</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="card" style="border:1px solid #FED7AA">
+    <div class="card-title" style="color:#C2410C">⚠️ データ削除</div>
+    <p style="font-size:13px;color:#64748B;margin-bottom:10px">全試合データを削除します。</p>
+    <button class="btn btn-d btn-full" onclick="clearData()">全データを削除する</button>
+  </div>
+</div>
+
+<!-- ── Bottom Nav ── -->
+<nav class="bottom-nav">
+  <button class="nbtn active" id="nav-home" onclick="showView('home')">
+    <span class="nicon">🏀</span><span>試合一覧</span>
+  </button>
+  <button class="nbtn" id="nav-analysis" onclick="showView('analysis')">
+    <span class="nicon">📊</span><span>分析</span>
+  </button>
+  <button class="nbtn" id="nav-settings" onclick="showView('settings')">
+    <span class="nicon">⚙️</span><span>設定</span>
+  </button>
+</nav>
+
+<!-- ════════════════════════════
+     全画面 記録ビュー
+     ════════════════════════════ -->
+<div id="view-recording" class="rec-view">
+  <!-- ヘッダ -->
+  <div class="rec-hd">
+    <button class="rec-back" id="recBackBtn" onclick="onRecBack()">← 戻る</button>
+    <button class="rec-back rec-endbtn" id="recEndBtn" onclick="onRecEnd()">🏁 記録終了</button>
+    <div class="rec-ginfo">
+      <div class="rec-gtitle" id="recTitle">記録中</div>
+      <div class="rec-gscore" id="recOpp"></div>
+    </div>
+  </div>
+
+  <!-- スタッツバー -->
+  <div class="rec-statsbar" id="recStatsBar">
+    <div class="rsb-chip"><div class="rsb-val" id="rsb-pts">0</div><div class="rsb-lbl">得点</div></div>
+    <div class="rsb-chip"><div class="rsb-val" id="rsb-2p">0/0</div><div class="rsb-lbl">2P</div></div>
+    <div class="rsb-chip"><div class="rsb-val" id="rsb-3p">0/0</div><div class="rsb-lbl">3P</div></div>
+    <div class="rsb-chip"><div class="rsb-val" id="rsb-ft">0/0</div><div class="rsb-lbl">FT</div></div>
+    <div class="rsb-chip"><div class="rsb-val" id="rsb-reb">0</div><div class="rsb-lbl">REB</div></div>
+    <div class="rsb-chip"><div class="rsb-val" id="rsb-ast">0</div><div class="rsb-lbl">AST</div></div>
+    <div class="rsb-chip"><div class="rsb-val" id="rsb-stl">0</div><div class="rsb-lbl">STL</div></div>
+    <div class="rsb-chip"><div class="rsb-val" id="rsb-tov">0</div><div class="rsb-lbl">TOV</div></div>
+    <div class="rsb-chip"><div class="rsb-val" id="rsb-foul">0</div><div class="rsb-lbl">FOUL</div></div>
+  </div>
+
+  <!-- スクロールエリア -->
+  <div class="rec-body">
+    <div class="court-hint">コートをタップ → シュートを記録（長押しで取り消し）</div>
+
+    <!-- コートSVG -->
+    <div class="court-wrap" id="courtWrap">
+      <svg id="courtSvg" viewBox="0 0 300 270" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
+
+    <!-- アクションボタン -->
+    <div class="action-grid">
+      <button class="act-btn ab-oreb" onclick="actTap('oreb',this)">攻撃<br>リバウンド</button>
+      <button class="act-btn ab-dreb" onclick="actTap('dreb',this)">守備<br>リバウンド</button>
+      <button class="act-btn ab-ast"  onclick="actTap('ast',this)">アシスト</button>
+      <button class="act-btn ab-stl"  onclick="actTap('stl',this)">スティール</button>
+      <button class="act-btn ab-blk"  onclick="actTap('blk',this)">ブロック</button>
+      <button class="act-btn ab-tov"  onclick="actTap('tov',this)">ターン<br>オーバー</button>
+      <button class="act-btn ab-foul" onclick="actTap('foul',this)">ファール</button>
+      <button class="act-btn ab-ftm"  onclick="actFtMade()">FT成功</button>
+      <button class="act-btn ab-ftx"  onclick="actFtMiss()">FT失敗</button>
+      <button class="act-btn ab-undo" onclick="undoLast()">取り消し</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════
+     シュートポップアップ
+     ════════════════════════════ -->
+<div id="spOv" class="sp-ov" onclick="if(event.target===this)closeShotPopup()">
+  <div id="spBox" class="sp-box">
+    <div class="sp-zone">
+      <b id="spZoneTxt" class="sp-zone-2p">2Pゾーン</b>
+    </div>
+    <div class="sp-grid">
+      <button class="sp-btn sp-made" onclick="confirmShot(true)">成功</button>
+      <button class="sp-btn sp-miss" onclick="confirmShot(false)">失敗</button>
+    </div>
+    <button class="sp-cancel" onclick="closeShotPopup()">キャンセル</button>
+  </div>
+</div>
+
+<!-- ── Modal: 試合情報 ── -->
+<div class="modal-ov" id="mGame">
+  <div class="modal">
+    <div class="mhead">
+      <div class="mtitle" id="mGameTitle">試合を追加</div>
+      <button class="mclose" onclick="closeM('mGame')">×</button>
+    </div>
+    <div class="mbody">
+      <div class="fg">
+        <label class="flabel">試合日</label>
+        <input class="finput" type="date" id="fDate">
+      </div>
+      <div class="fg">
+        <label class="flabel">対戦相手</label>
+        <input class="finput" id="fOpp" placeholder="例: チームA">
+      </div>
+      <div class="fg" id="fgMin">
+        <label class="flabel">出場時間（分）</label>
+        <input class="finput" type="number" min="0" step="1" id="fEditMin" placeholder="例: 20">
+      </div>
+      <div class="fg" id="fgScore">
+        <label class="flabel">スコア</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input class="finput" type="number" min="0" id="fDs" placeholder="自分側" style="flex:1">
+          <span style="color:#64748B;flex-shrink:0">–</span>
+          <input class="finput" type="number" min="0" id="fOs" placeholder="相手" style="flex:1">
+        </div>
+      </div>
+      <div class="fg" id="fgResult">
+        <label class="flabel">結果</label>
+        <div style="display:flex;gap:8px">
+          <button class="btn" id="rbW" onclick="selRes('Win')"  style="flex:1">勝</button>
+          <button class="btn" id="rbL" onclick="selRes('Lose')" style="flex:1">負</button>
+          <button class="btn" id="rbD" onclick="selRes('Draw')" style="flex:1">引分</button>
+        </div>
+      </div>
+    </div>
+    <div class="mfooter">
+      <button class="btn btn-d" id="delGameBtn" onclick="delGame()" style="display:none">削除</button>
+      <div class="spacer"></div>
+      <button class="btn btn-s" onclick="closeM('mGame')">キャンセル</button>
+      <button class="btn btn-p" id="saveGameBtn" onclick="saveGame()">▶ 記録開始</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal: 記録終了 ── -->
+<div class="modal-ov" id="mClose">
+  <div class="modal">
+    <div class="mhead">
+      <div class="mtitle">🏁 記録を終了する</div>
+    </div>
+    <div class="mbody">
+      <div class="fg">
+        <label class="flabel">出場時間（分）</label>
+        <input class="finput" type="number" min="0" step="1" id="fMin" placeholder="例: 20">
+      </div>
+      <div class="fg">
+        <label class="flabel">スコア</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input class="finput" type="number" min="0" id="fCloseDs" placeholder="自チーム" style="flex:1"
+            oninput="autoCloseResult()">
+          <span style="color:#64748B;flex-shrink:0;font-size:18px">–</span>
+          <input class="finput" type="number" min="0" id="fCloseOs" placeholder="相手" style="flex:1"
+            oninput="autoCloseResult()">
+        </div>
+      </div>
+      <div class="fg">
+        <label class="flabel">勝敗</label>
+        <div style="display:flex;gap:8px">
+          <button class="btn" id="crW" onclick="selCloseRes('Win')"  style="flex:1">勝</button>
+          <button class="btn" id="crL" onclick="selCloseRes('Lose')" style="flex:1">負</button>
+          <button class="btn" id="crD" onclick="selCloseRes('Draw')" style="flex:1">引分</button>
+        </div>
+      </div>
+    </div>
+    <div class="mfooter">
+      <button class="btn btn-s" onclick="skipAndClose()">スキップ</button>
+      <div class="spacer"></div>
+      <button class="btn btn-p" onclick="saveAndClose()">保存して終了</button>
+    </div>
+  </div>
+</div>
+
+<script src="chart.min.js"></script>
+<script>
+// ════════════════════════════════════════
+// データ・状態
+// ════════════════════════════════════════
+var DB = { config:{ playerName:'' }, games:[] };
+
+// 試合フォーム
+var editId = null;
+var curRes = 'Win';
+
+// 記録ビュー
+var recGameId = null;
+var saveTimer = null;
+var recIsEdit = false;
+var recSnapshot = null;
+
+// シュートポップアップ用
+var pendingX = 0, pendingY = 0, pending3P = false;
+
+// グラフ
+var chartReg = {};
+
+// アクション履歴（Undo用）
+var actionHistory = [];
+
+// ════════════════════════════════════════
+// ストレージ
+// ════════════════════════════════════════
+function loadDB(){
+  try{ var s=localStorage.getItem('bskt_ind_v1'); if(s) DB=JSON.parse(s); }catch(e){}
+  DB.games.forEach(function(g){
+    if(!g.shots) g.shots=[];
+    if(!g.stats) g.stats=emptyStats();
+  });
+}
+function saveDB(){ localStorage.setItem('bskt_ind_v1',JSON.stringify(DB)); }
+
+function emptyStats(){
+  return {pm2:0,pa2:0,pm3:0,pa3:0,ftm:0,fta:0,oreb:0,dreb:0,ast:0,stl:0,blk:0,tov:0,foul:0,min:0};
+}
+
+// ════════════════════════════════════════
+// ナビゲーション
+// ════════════════════════════════════════
+function showView(name){
+  document.querySelectorAll('.view').forEach(function(v){v.classList.remove('active');});
+  document.querySelectorAll('.nbtn').forEach(function(b){b.classList.remove('active');});
+  document.getElementById('view-'+name).classList.add('active');
+  document.getElementById('nav-'+name).classList.add('active');
+  if(name==='home')     renderHome();
+  if(name==='analysis') renderAnalysis();
+  if(name==='settings') renderSettings();
+}
+
+// ════════════════════════════════════════
+// ホームビュー
+// ════════════════════════════════════════
+function renderHome(){
+  updateAppHeader();
+  var el = document.getElementById('homeContent');
+  var games = sortedGames();
+  var g = DB.games;
+  var w = g.filter(function(x){return x.result==='Win';}).length;
+  var l = g.filter(function(x){return x.result==='Lose';}).length;
+  var wr = (w+l)>0 ? Math.round(w/(w+l)*1000)/10 : 0;
+  var html = '';
+
+  if(!games.length){
+    html = '<div class="guide-card">'
+      +'<div class="guide-icon">🏀</div>'
+      +'<div class="guide-title">まだ試合が記録されていません</div>'
+      +'<button class="guide-btn" onclick="showAddGame()">🏀 最初の試合を記録する</button>'
+      +'</div>';
+  } else {
+    html += '<div class="stat-chips">'
+      +'<div class="stat-chip"><div class="chip-val">'+g.length+'</div><div class="chip-lbl">試合数</div></div>'
+      +'<div class="stat-chip"><div class="chip-val" style="color:#166534">'+w+'勝</div><div class="chip-lbl">勝利</div></div>'
+      +'<div class="stat-chip"><div class="chip-val" style="color:#991B1B">'+l+'敗</div><div class="chip-lbl">敗戦</div></div>'
+      +'<div class="stat-chip"><div class="chip-val">'+wr+'%</div><div class="chip-lbl">勝率</div></div>'
+      +'</div>';
+
+    html += '<div class="add-game-card" onclick="showAddGame()">'
+      +'<div class="add-game-icon">＋</div>'
+      +'<div><div class="add-game-title">今日の試合を追加する</div>'
+      +'<div class="add-game-sub">コートでリアルタイム記録</div></div>'
+      +'</div>';
+
+    html += '<div class="sec-hdr"><div class="sec-hdr-line"></div>'
+      +'<div class="sec-hdr-txt">試合履歴（'+g.length+'試合）</div>'
+      +'<div class="sec-hdr-line"></div></div>';
+
+    html += games.map(function(gm){
+      var st = gm.stats||emptyStats();
+      var pts = calcPts(st);
+      var bc = {Win:'bwin',Lose:'blose',Draw:'bdraw'}[gm.result]||'';
+      var hasSt = (gm.shots||[]).length > 0 || hasStats(st);
+      return '<div class="gcard">'
+        +'<div class="ghead" onclick="toggleDetail(\''+gm.id+'\')">'
+        +'<div class="gdate">'+esc(gm.date)+'</div>'
+        +'<div class="gopp">'+esc(gm.opp)+'</div>'
+        +'<div><div class="gpts">'+pts+'</div><div class="gpts-lbl">得点</div></div>'
+        +'<span class="badge '+bc+'">'+esc(gm.result)+'</span>'
+        +'<button class="editbtn" onclick="event.stopPropagation();editGame(\''+gm.id+'\')">✏️</button>'
+        +'</div>'
+        +'<div class="gdetail" id="gd-'+gm.id+'">'
+        +buildDetailChips(st, gm)
+        +'<button class="stabtn" onclick="openRecording(\''+gm.id+'\','+(hasSt?'true':'false')+')">'
+        +'⏱ '+(hasSt?'スタッツを修正':'試合中に記録する')
+        +'</button>'
+        +'</div>'
+        +'</div>';
+    }).join('');
+  }
+
+  el.innerHTML = html;
+}
+
+function buildDetailChips(st, gm){
+  var pts = calcPts(st);
+  var sc = (gm.ds!=null?gm.ds:'?')+' – '+(gm.os!=null?gm.os:'?');
+  var fg = st.pa2+st.pa3;
+  var fgm = st.pm2+st.pm3;
+  var items = [
+    [pts+'点', '得点'],
+    [st.pm2+'/'+st.pa2, '2P'],
+    [st.pm3+'/'+st.pa3, '3P'],
+    [st.ftm+'/'+st.fta, 'FT'],
+    [st.oreb+'/'+st.dreb, 'OR/DR'],
+    [st.ast, 'AST'],
+    [st.stl, 'STL'],
+    [st.blk, 'BLK'],
+    [st.tov, 'TOV'],
+    [(st.foul||0), 'FOUL'],
+    [sc, 'スコア'],
+  ];
+  return '<div class="gd-row">'+items.map(function(i){
+    return '<div class="gd-chip"><b>'+i[0]+'</b><span>'+i[1]+'</span></div>';
+  }).join('')+'</div>';
+}
+
+function toggleDetail(id){
+  var el = document.getElementById('gd-'+id);
+  if(el) el.classList.toggle('open');
+}
+
+function hasStats(st){
+  if(!st) return false;
+  return ['pm2','pa2','pm3','pa3','ftm','fta','oreb','dreb','ast','stl','blk','tov','foul'].some(function(k){return (st[k]||0)>0;});
+}
+
+function calcPts(st){
+  if(!st) return 0;
+  return (st.pm2||0)*2 + (st.pm3||0)*3 + (st.ftm||0);
+}
+
+function updateAppHeader(){
+  var name = DB.config.playerName;
+  document.getElementById('appTitle').textContent = name ? name+'のスタッツ' : '個人バスケスタッツ';
+  var g = DB.games, w = g.filter(function(x){return x.result==='Win';}).length;
+  document.getElementById('appSub').textContent = '';
+}
+
+// ════════════════════════════════════════
+// 試合フォーム
+// ════════════════════════════════════════
+function showAddGame(){
+  editId = null;
+  document.getElementById('mGameTitle').textContent = '試合を追加';
+  document.getElementById('fDate').value = todayStr();
+  document.getElementById('fOpp').value = '';
+  document.getElementById('fDs').value = '';
+  document.getElementById('fOs').value = '';
+  document.getElementById('delGameBtn').style.display = 'none';
+  document.getElementById('fgMin').style.display   = 'none';
+  document.getElementById('fgScore').style.display  = 'none';
+  document.getElementById('fgResult').style.display = 'none';
+  document.getElementById('saveGameBtn').textContent = '▶ 記録開始';
+  selRes('Win');
+  openM('mGame');
+}
+function editGame(id){
+  var gm = DB.games.find(function(x){return x.id===id;});
+  if(!gm) return;
+  editId = id;
+  var minVal = (gm.stats && gm.stats.min) ? gm.stats.min : '';
+  document.getElementById('mGameTitle').textContent = '試合を編集';
+  document.getElementById('fDate').value   = gm.date.replace(/\//g,'-');
+  document.getElementById('fOpp').value    = gm.opp;
+  document.getElementById('fDs').value     = gm.ds!=null ? gm.ds : '';
+  document.getElementById('fOs').value     = gm.os!=null ? gm.os : '';
+  document.getElementById('fEditMin').value = minVal;
+  document.getElementById('delGameBtn').style.display = 'inline-block';
+  document.getElementById('fgMin').style.display   = '';
+  document.getElementById('fgScore').style.display  = '';
+  document.getElementById('fgResult').style.display = '';
+  document.getElementById('saveGameBtn').textContent = '✓ 保存';
+  selRes(gm.result||'Win');
+  openM('mGame');
+}
+function selRes(v){
+  curRes = v;
+  var cfg = {
+    Win: {W:'#DCFCE7',Wc:'#166534',L:'#E2E8F0',Lc:'#475569',D:'#E2E8F0',Dc:'#475569'},
+    Lose:{W:'#E2E8F0',Wc:'#475569',L:'#FEE2E2',Lc:'#991B1B',D:'#E2E8F0',Dc:'#475569'},
+    Draw:{W:'#E2E8F0',Wc:'#475569',L:'#E2E8F0',Lc:'#475569',D:'#FEF9C3',Dc:'#854D0E'}
+  }[v];
+  var bw=document.getElementById('rbW'),bl=document.getElementById('rbL'),bd=document.getElementById('rbD');
+  bw.style.background=cfg.W; bw.style.color=cfg.Wc;
+  bl.style.background=cfg.L; bl.style.color=cfg.Lc;
+  bd.style.background=cfg.D; bd.style.color=cfg.Dc;
+}
+function saveGame(){
+  var isNew = !editId;
+  var date = document.getElementById('fDate').value;
+  var opp  = document.getElementById('fOpp').value.trim();
+  if(!date||!opp){ alert('試合日と対戦相手を入力してください'); return; }
+  var ds = document.getElementById('fDs').value;
+  var os = document.getElementById('fOs').value;
+  var id = editId || 'g'+Date.now();
+  var gm = DB.games.find(function(x){return x.id===id;});
+  if(!gm){ gm={id:id,date:'',opp:'',ds:null,os:null,result:'Win',shots:[],stats:emptyStats()}; DB.games.push(gm); }
+  gm.date = date.replace(/-/g,'/');
+  gm.opp  = opp;
+  gm.ds   = ds!=='' ? Number(ds) : null;
+  gm.os   = os!=='' ? Number(os) : null;
+  gm.result = curRes;
+  // 編集時のみ出場時間を保存
+  if(!isNew){
+    var minRaw = document.getElementById('fEditMin').value;
+    var minVal = parseInt(minRaw);
+    if(!isNaN(minVal) && minVal >= 0){
+      if(!gm.stats) gm.stats = emptyStats();
+      gm.stats.min = minVal;
+    }
+  }
+  editId = id;
+  saveDB();
+  closeM('mGame');
+  if(isNew) openRecording(id);
+  else renderHome();
+}
+function delGame(){
+  if(!editId) return;
+  if(!confirm('この試合を削除しますか？')) return;
+  DB.games = DB.games.filter(function(g){return g.id!==editId;});
+  saveDB(); closeM('mGame'); renderHome();
+}
+
+// ════════════════════════════════════════
+// 記録ビュー
+// ════════════════════════════════════════
+function openRecording(gameId, isEdit){
+  var gm = DB.games.find(function(g){return g.id===gameId;});
+  if(!gm) return;
+  recGameId = gameId;
+  recIsEdit = !!isEdit;
+  actionHistory = [];
+
+  if(recIsEdit){
+    recSnapshot = {
+      stats: Object.assign({}, gm.stats),
+      shots: (gm.shots||[]).slice()
+    };
+  } else {
+    recSnapshot = null;
+  }
+
+  document.getElementById('recTitle').textContent = gm.date + ' vs ' + gm.opp;
+  document.getElementById('recOpp').textContent = '結果: '+gm.result + (gm.ds!=null ? '  スコア: '+gm.ds+'–'+gm.os : '');
+  document.getElementById('recBackBtn').textContent = recIsEdit ? '✗ キャンセル' : '← 戻る';
+  document.getElementById('recEndBtn').textContent  = recIsEdit ? '💾 保存' : '🏁 記録終了';
+
+  buildCourtSvg();
+  updateStatsBar();
+
+  document.getElementById('view-recording').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function onRecBack(){
+  if(recIsEdit) cancelRecording();
+  else closeRecording();
+}
+
+function onRecEnd(){
+  if(recIsEdit) completeEdit();
+  else closeRecording();
+}
+
+function closeRecording(){
+  // 記録終了モーダルを表示（出場時間・スコア入力）
+  var gm = currentGame();
+  var st = gm ? (gm.stats||emptyStats()) : emptyStats();
+  document.getElementById('fMin').value    = (st.min||0) > 0 ? st.min : '';
+  document.getElementById('fCloseDs').value = gm && gm.ds != null ? gm.ds : '';
+  document.getElementById('fCloseOs').value = gm && gm.os != null ? gm.os : '';
+  curCloseRes = gm ? (gm.result||'Win') : 'Win';
+  updateCloseResButtons();
+  openM('mClose');
+}
+
+var curCloseRes = 'Win';
+
+function selCloseRes(v){
+  curCloseRes = v;
+  updateCloseResButtons();
+}
+
+function updateCloseResButtons(){
+  var cfg = {
+    Win: {W:'#DCFCE7',Wc:'#166534',L:'#E2E8F0',Lc:'#475569',D:'#E2E8F0',Dc:'#475569'},
+    Lose:{W:'#E2E8F0',Wc:'#475569',L:'#FEE2E2',Lc:'#991B1B',D:'#E2E8F0',Dc:'#475569'},
+    Draw:{W:'#E2E8F0',Wc:'#475569',L:'#E2E8F0',Lc:'#475569',D:'#FEF9C3',Dc:'#854D0E'}
+  }[curCloseRes];
+  var bw=document.getElementById('crW'),bl=document.getElementById('crL'),bd=document.getElementById('crD');
+  if(!bw) return;
+  bw.style.background=cfg.W; bw.style.color=cfg.Wc;
+  bl.style.background=cfg.L; bl.style.color=cfg.Lc;
+  bd.style.background=cfg.D; bd.style.color=cfg.Dc;
+}
+
+function autoCloseResult(){
+  var ds = parseInt(document.getElementById('fCloseDs').value);
+  var os = parseInt(document.getElementById('fCloseOs').value);
+  if(!isNaN(ds) && !isNaN(os)){
+    if(ds > os)      selCloseRes('Win');
+    else if(ds < os) selCloseRes('Lose');
+    else             selCloseRes('Draw');
+  }
+}
+
+function saveAndClose(){
+  var gm = currentGame();
+  if(gm){
+    var minVal = parseInt(document.getElementById('fMin').value);
+    if(!isNaN(minVal) && minVal >= 0) gm.stats.min = minVal;
+    var ds = document.getElementById('fCloseDs').value;
+    var os = document.getElementById('fCloseOs').value;
+    if(ds !== '') gm.ds = Number(ds);
+    if(os !== '') gm.os = Number(os);
+    gm.result = curCloseRes;
+  }
+  if(saveTimer){ clearTimeout(saveTimer); saveTimer=null; }
+  saveDB();
+  closeM('mClose');
+  recIsEdit = false;
+  document.getElementById('view-recording').classList.remove('active');
+  document.body.style.overflow = '';
+  renderHome();
+}
+
+function skipAndClose(){
+  if(saveTimer){ clearTimeout(saveTimer); saveTimer=null; }
+  saveDB();
+  closeM('mClose');
+  recIsEdit = false;
+  document.getElementById('view-recording').classList.remove('active');
+  document.body.style.overflow = '';
+  renderHome();
+}
+
+function cancelRecording(){
+  if(saveTimer){ clearTimeout(saveTimer); saveTimer=null; }
+  if(recSnapshot){
+    var gm = DB.games.find(function(g){return g.id===recGameId;});
+    if(gm){ gm.stats=recSnapshot.stats; gm.shots=recSnapshot.shots; }
+    recSnapshot = null;
+  }
+  recIsEdit = false;
+  document.getElementById('view-recording').classList.remove('active');
+  document.body.style.overflow = '';
+  renderHome();
+}
+
+function completeEdit(){
+  if(saveTimer){ clearTimeout(saveTimer); saveTimer=null; }
+  saveDB();
+  recSnapshot = null;
+  recIsEdit = false;
+  document.getElementById('view-recording').classList.remove('active');
+  document.body.style.overflow = '';
+  renderHome();
+}
+
+function scheduleSave(){
+  if(recIsEdit) return;
+  if(saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(function(){ saveDB(); }, 500);
+}
+
+function currentGame(){
+  return DB.games.find(function(g){return g.id===recGameId;}) || null;
+}
+
+// ── スタッツバー更新 ──
+function updateStatsBar(){
+  var gm = currentGame();
+  if(!gm) return;
+  var st = gm.stats;
+  var pts = calcPts(st);
+  document.getElementById('rsb-pts').textContent  = pts;
+  document.getElementById('rsb-2p').textContent   = st.pm2+'/'+st.pa2;
+  document.getElementById('rsb-3p').textContent   = st.pm3+'/'+st.pa3;
+  document.getElementById('rsb-ft').textContent   = st.ftm+'/'+st.fta;
+  document.getElementById('rsb-reb').textContent  = (st.oreb+st.dreb);
+  document.getElementById('rsb-ast').textContent  = st.ast;
+  document.getElementById('rsb-stl').textContent  = st.stl;
+  document.getElementById('rsb-tov').textContent  = st.tov;
+  document.getElementById('rsb-foul').textContent = (st.foul||0);
+}
+
+// ── アクションボタン ──
+function actTap(key, btn){
+  var gm = currentGame(); if(!gm) return;
+  gm.stats[key] = (gm.stats[key]||0) + 1;
+  actionHistory.push({type:'stat', key:key});
+  scheduleSave();
+  updateStatsBar();
+  if(btn){ flashEl(btn, false); }
+  if(navigator.vibrate) navigator.vibrate(30);
+}
+function actFtMade(){
+  var gm = currentGame(); if(!gm) return;
+  gm.stats.ftm++; gm.stats.fta++;
+  actionHistory.push({type:'stat', key:'ftmade'});
+  scheduleSave(); updateStatsBar();
+  var btn = document.querySelector('.ab-ftm');
+  if(btn) flashEl(btn, false);
+  if(navigator.vibrate) navigator.vibrate(30);
+}
+function actFtMiss(){
+  var gm = currentGame(); if(!gm) return;
+  gm.stats.fta++;
+  actionHistory.push({type:'stat', key:'ftmiss'});
+  scheduleSave(); updateStatsBar();
+  var btn = document.querySelector('.ab-ftx');
+  if(btn) flashEl(btn, true);
+  if(navigator.vibrate) navigator.vibrate(30);
+}
+function undoLast(){
+  var gm = currentGame(); if(!gm) return;
+  if(!actionHistory.length){ alert('取り消せる操作がありません'); return; }
+  var last = actionHistory.pop();
+  if(last.type === 'shot'){
+    // シュートの取り消し
+    var idx = gm.shots.lastIndexOf(last.shot);
+    if(idx < 0) idx = gm.shots.length-1;
+    if(idx >= 0) gm.shots.splice(idx,1);
+    // カウンタ戻す
+    if(last.shot.type==='2P'){
+      if(last.shot.made){ gm.stats.pm2=Math.max(0,gm.stats.pm2-1); }
+      gm.stats.pa2=Math.max(0,gm.stats.pa2-1);
+    } else if(last.shot.type==='3P'){
+      if(last.shot.made){ gm.stats.pm3=Math.max(0,gm.stats.pm3-1); }
+      gm.stats.pa3=Math.max(0,gm.stats.pa3-1);
+    }
+    buildCourtSvg();
+  } else if(last.type==='stat'){
+    switch(last.key){
+      case 'ftmade': gm.stats.ftm=Math.max(0,gm.stats.ftm-1); gm.stats.fta=Math.max(0,gm.stats.fta-1); break;
+      case 'ftmiss': gm.stats.fta=Math.max(0,gm.stats.fta-1); break;
+      default: gm.stats[last.key]=Math.max(0,(gm.stats[last.key]||0)-1);
+    }
+  }
+  scheduleSave(); updateStatsBar();
+  if(navigator.vibrate) navigator.vibrate([10,10,10]);
+}
+
+// ════════════════════════════════════════
+// コートSVG
+// ════════════════════════════════════════
+// viewBox: "0 0 300 270"
+// バスケット: (150, 230), r=7
+var BASKET_X = 150, BASKET_Y = 230, ARC_R = 130;
+var CORNER_X_L = 30, CORNER_X_R = 270, CORNER_Y = 180;
+
+// ─────────────────────────────────────────────
+// FIBA 2023 コート寸法  スケール: 18px = 1m
+//   コート幅 15m → 270px (x=15〜285)
+//   ハーフコート深 14m → 252px (y=6〜258)
+//   バスケット: (150, 230)  ベースライン: y=258
+//   バスケット〜ベースライン: 28px = 1.56m ≈ 1.575m
+//
+// 制限区域（ペイントエリア）: 幅4.9m × 深5.8m
+//   幅: 4.9×18=88.2px → x=106〜194
+//   深: 5.8×18=104.4px → FTライン y=258-104=154
+//
+// フリースローサークル: 半径1.8m = 32px
+//   端点: x=118, x=182
+//
+// ノーチャージセミサークル: 半径1.30m = 23px (2023規則)
+//   端点: x=127, x=173
+//   延長線: 0.375m = 7px  (y=237〜230)
+//
+// 3Pアーク: 半径6.75m ≈ 130px (視覚的に調整済み)
+//   コーナー直線: x=30, x=270 (エンドラインから0.9m)
+// ─────────────────────────────────────────────
+function courtBaseSvg(){
+  var lines = [
+    // コート背景
+    '<rect width="300" height="270" fill="#C5883E"/>',
+    // コート外線
+    '<rect x="15" y="6" width="270" height="252" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="1.5"/>',
+    // ハーフコートライン（上端）
+    '<line x1="15" y1="6" x2="285" y2="6" stroke="rgba(255,255,255,.5)" stroke-width="1.5"/>',
+    // センターサークル下半分（ハーフコートライン上、コート側へ凸、半径1.8m=32px）
+    // sweep=1(時計回り): (182,6)→(150,38)[コート内]→(118,6)
+    '<path d="M 182 6 A 32 32 0 0 1 118 6" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="1.5"/>',
+
+    // ──── 制限区域（ペイントエリア）4.9m×5.8m ────
+    // 長方形: x=106〜194 (88px=4.9m), y=154〜258 (104px=5.8m)
+    '<rect x="106" y="154" width="88" height="104" fill="rgba(255,255,255,.09)" stroke="white" stroke-width="1.8"/>',
+
+    // フリースローライン（制限区域の上辺と同じ y=154）
+    '<line x1="106" y1="154" x2="194" y2="154" stroke="white" stroke-width="1.8"/>',
+
+    // フリースローサークル 半径1.8m=32px, 中心(150,154)
+    // 上半分（ハーフコート側）実線 — 反時計回り sweep=0
+    '<path d="M 118 154 A 32 32 0 0 0 182 154" fill="none" stroke="white" stroke-width="1.5"/>',
+    // 下半分（バスケット側）破線 — 時計回り sweep=1
+    '<path d="M 118 154 A 32 32 0 0 1 182 154" fill="none" stroke="white" stroke-width="1.5" stroke-dasharray="5,4"/>',
+
+    // ──── ノーチャージセミサークル (2023: 半径1.30m=23px) ────
+    // 延長線 0.375m=7px: (127,237)→(127,230) と (173,237)→(173,230)
+    '<line x1="127" y1="237" x2="127" y2="230" stroke="white" stroke-width="1.5"/>',
+    '<line x1="173" y1="237" x2="173" y2="230" stroke="white" stroke-width="1.5"/>',
+    // セミサークル弧 — 時計回り(sweep=1)で上方向へ
+    '<path d="M 127 230 A 23 23 0 0 1 173 230" fill="none" stroke="white" stroke-width="1.5"/>',
+
+    // ──── 3Pライン ────
+    // コーナー直線(x=30,270) + アーク center(150,230) r=130
+    '<path d="M 30 258 L 30 180 A 130 130 0 0 1 270 180 L 270 258" fill="none" stroke="white" stroke-width="2"/>',
+
+    // バスケットリング
+    '<circle cx="150" cy="230" r="7" fill="none" stroke="#FF8C00" stroke-width="2.5"/>',
+    // バックボード 幅1.83m≈33px — リングのベースライン側(y>230)
+    // バスケット中心〜ボード面: 0.15m ≈ 3px → 230+3+7(リング半径)=240
+    '<line x1="134" y1="240" x2="166" y2="240" stroke="white" stroke-width="3"/>',
+  ];
+  return lines.join('');
+}
+
+function shotDotsSvg(shots){
+  if(!shots||!shots.length) return '';
+  return shots.map(function(s){
+    var cx = s.x.toFixed(1), cy = s.y.toFixed(1);
+    var is3 = s.type === '3P';
+    if(s.made){
+      var fill = is3 ? '#3b82f6' : '#22c55e';
+      return '<circle cx="'+cx+'" cy="'+cy+'" r="7" fill="'+fill+'" fill-opacity="0.85" stroke="white" stroke-width="1.5"/>';
+    } else {
+      var r = 5.5;
+      var x = parseFloat(cx), y = parseFloat(cy);
+      var sc = is3 ? '#f97316' : '#ef4444';
+      var bg = is3 ? 'rgba(249,115,22,.15)' : 'rgba(239,68,68,.15)';
+      return '<g>'
+        +'<circle cx="'+cx+'" cy="'+cy+'" r="7" fill="'+bg+'"/>'
+        +'<line x1="'+(x-r).toFixed(1)+'" y1="'+(y-r).toFixed(1)+'" x2="'+(x+r).toFixed(1)+'" y2="'+(y+r).toFixed(1)+'" stroke="'+sc+'" stroke-width="2.5" stroke-linecap="round"/>'
+        +'<line x1="'+(x+r).toFixed(1)+'" y1="'+(y-r).toFixed(1)+'" x2="'+(x-r).toFixed(1)+'" y2="'+(y+r).toFixed(1)+'" stroke="'+sc+'" stroke-width="2.5" stroke-linecap="round"/>'
+        +'</g>';
+    }
+  }).join('');
+}
+
+function buildCourtSvg(){
+  var svgEl = document.getElementById('courtSvg');
+  if(!svgEl) return;
+
+  updateCourtSvg();
+
+  // タッチ/クリックイベント（登録済みなら再登録しない）
+  if(!svgEl._eventsSet){
+    svgEl._eventsSet = true;
+
+    svgEl.addEventListener('touchstart', function(e){
+      e.preventDefault();
+      var touch = e.changedTouches[0];
+      var rect  = svgEl.getBoundingClientRect();
+      var svgX  = (touch.clientX - rect.left) / rect.width  * 300;
+      var svgY  = (touch.clientY - rect.top)  / rect.height * 270;
+      handleCourtTap(svgX, svgY, touch.clientX, touch.clientY);
+    }, {passive:false});
+
+    svgEl.addEventListener('click', function(e){
+      var rect = svgEl.getBoundingClientRect();
+      var svgX = (e.clientX - rect.left) / rect.width  * 300;
+      var svgY = (e.clientY - rect.top)  / rect.height * 270;
+      handleCourtTap(svgX, svgY, e.clientX, e.clientY);
+    });
+  }
+}
+
+function updateCourtSvg(){
+  var svgEl = document.getElementById('courtSvg');
+  if(!svgEl) return;
+  var gm = currentGame();
+  var shots = gm ? (gm.shots||[]) : [];
+  svgEl.innerHTML = courtBaseSvg() + shotDotsSvg(shots);
+}
+
+// ── タップ処理 ──
+function handleCourtTap(svgX, svgY, clientX, clientY){
+  // ハーフコートライン以上はシュートエリア外
+  if(svgY < 18) return;
+
+  pending3P = is3PZone(svgX, svgY);
+  pendingX  = svgX;
+  pendingY  = svgY;
+
+  // ポップアップの位置を設定
+  var sw = window.innerWidth, sh = window.innerHeight;
+  var pw = 230, ph = 200;
+  var px = Math.min(Math.max(clientX - pw/2, 6), sw - pw - 6);
+  var py = Math.min(Math.max(clientY - ph - 16, 56), sh - ph - 70);
+
+  var box = document.getElementById('spBox');
+  box.style.left  = px + 'px';
+  box.style.top   = py + 'px';
+
+  var zoneTxt = document.getElementById('spZoneTxt');
+  if(pending3P){
+    zoneTxt.textContent = '3Pゾーン';
+    zoneTxt.className = 'sp-zone-3p';
+  } else {
+    zoneTxt.textContent = '2Pゾーン';
+    zoneTxt.className = 'sp-zone-2p';
+  }
+
+  document.getElementById('spOv').classList.add('open');
+}
+
+// 3Pゾーン判定
+// コーナー直線: x<30 or x>270 (y: 180〜258)
+// アーク: basket(150,230)からの距離>130
+function is3PZone(svgX, svgY){
+  // リストリクテッドエリアは常に2P
+  var dx = svgX - BASKET_X, dy = svgY - BASKET_Y;
+  var dist = Math.sqrt(dx*dx + dy*dy);
+  if(dist < 13) return false;
+  // コーナー3P
+  if(svgX < CORNER_X_L || svgX > CORNER_X_R) return true;
+  return dist > ARC_R;
+}
+
+// ── シュートポップアップ ──
+function confirmShot(made){
+  var gm = currentGame(); if(!gm) return;
+  var type = pending3P ? '3P' : '2P';
+  var shot = {x:pendingX, y:pendingY, type:type, made:made};
+  gm.shots.push(shot);
+  actionHistory.push({type:'shot', shot:shot});
+
+  if(type==='2P'){
+    if(made) gm.stats.pm2++;
+    gm.stats.pa2++;
+  } else {
+    if(made) gm.stats.pm3++;
+    gm.stats.pa3++;
+  }
+
+  scheduleSave();
+  updateCourtSvg();
+  updateStatsBar();
+  closeShotPopup();
+  if(navigator.vibrate) navigator.vibrate(made ? [40] : [20,10,20]);
+}
+
+function closeShotPopup(){
+  document.getElementById('spOv').classList.remove('open');
+}
+
+// ════════════════════════════════════════
+// 分析ビュー
+// ════════════════════════════════════════
+var curAnalysisTab = 'chart';
+
+function switchATab(tab){
+  curAnalysisTab = tab;
+  document.querySelectorAll('.atab').forEach(function(b){b.classList.remove('active');});
+  document.querySelectorAll('.apanel').forEach(function(p){p.classList.remove('active');});
+  document.getElementById('atab-'+tab).classList.add('active');
+  document.getElementById('apanel-'+tab).classList.add('active');
+  if(tab==='chart') renderChartPanel();
+  if(tab==='shot')  renderShotPanel();
+  if(tab==='table') renderTablePanel();
+}
+
+function renderAnalysis(){
+  // 全タブ再描画
+  Object.keys(chartReg).forEach(function(k){ try{chartReg[k].destroy();}catch(e){} });
+  chartReg = {};
+  switchATab(curAnalysisTab);
+}
+
+// ── グラフパネル ──
+function renderChartPanel(){
+  var el = document.getElementById('apanel-chart');
+  var games = sortedGames().reverse(); // 古い順
+
+  if(!games.length){
+    el.innerHTML = '<div class="no-data">試合データがありません</div>';
+    return;
+  }
+
+  var html = '';
+
+  // 得点・各スタッツ推移
+  html += '<div class="chart-card">'
+    +'<div class="chart-title">スタッツ推移</div>'
+    +'<div class="cbtn-row" id="trendBtns">'
+    +[['pts','得点'],['2p','2P%'],['3p','3P%'],['ft','FT%'],['reb','REB'],['ast','AST'],['stl','STL'],['tov','TOV']].map(function(p,i){
+      return '<button class="cbtn'+(i===0?' active':'')+'" onclick="showTrend(\''+p[0]+'\',this)">'+p[1]+'</button>';
+    }).join('')
+    +'</div>'
+    +'<div class="carea"><canvas id="trendC"></canvas></div>'
+    +'</div>';
+
+  // 成功率
+  html += '<div class="chart-card">'
+    +'<div class="chart-title">累計成功率</div>'
+    +'<div class="carea" style="height:160px"><canvas id="rateC"></canvas></div>'
+    +'</div>';
+
+  el.innerHTML = html;
+
+  showTrend('pts', null);
+  renderRateChart();
+}
+
+function showTrend(key, btn){
+  if(btn){
+    document.getElementById('trendBtns').querySelectorAll('.cbtn').forEach(function(b){b.classList.remove('active');});
+    btn.classList.add('active');
+  }
+  var games = sortedGames().reverse();
+  var labels = games.map(function(g){ return g.date.slice(5); });
+  var cfgMap = {
+    pts:{label:'得点',    color:'#3b82f6'},
+    '2p':{label:'2P%',   color:'#8b5cf6'},
+    '3p':{label:'3P%',   color:'#14b8a6'},
+    ft:  {label:'FT%',   color:'#f59e0b'},
+    reb: {label:'REB',   color:'#f97316'},
+    ast: {label:'AST',   color:'#06b6d4'},
+    stl: {label:'STL',   color:'#ec4899'},
+    tov: {label:'TOV',   color:'#ef4444'}
+  };
+  var c = cfgMap[key];
+  var data = games.map(function(g){
+    var st = g.stats||emptyStats();
+    if(key==='pts') return calcPts(st);
+    if(key==='2p')  return st.pa2>0 ? Math.round(st.pm2/st.pa2*1000)/10 : null;
+    if(key==='3p')  return st.pa3>0 ? Math.round(st.pm3/st.pa3*1000)/10 : null;
+    if(key==='ft')  return st.fta>0 ? Math.round(st.ftm/st.fta*1000)/10 : null;
+    if(key==='reb') return (st.oreb||0)+(st.dreb||0);
+    if(key==='ast') return st.ast||0;
+    if(key==='stl') return st.stl||0;
+    if(key==='tov') return st.tov||0;
+    return null;
+  });
+  var ptColors = games.map(function(g){ return {Win:'#22c55e',Lose:'#ef4444',Draw:'#eab308'}[g.result]||'#94a3b8'; });
+  regChart('trendC',{
+    type:'line',
+    data:{labels:labels, datasets:[{
+      label:c.label, data:data,
+      borderColor:c.color, backgroundColor:c.color+'22',
+      tension:0.3, fill:true,
+      pointRadius:6, pointBackgroundColor:ptColors,
+      pointBorderColor:'#fff', pointBorderWidth:2,
+      spanGaps:false
+    }]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      scales:{y:{beginAtZero:true}},
+      plugins:{legend:{display:false},tooltip:{callbacks:{afterLabel:function(ctx){return games[ctx.dataIndex].result;}}}},
+      animation:{duration:900, easing:'easeInOutQuart'}
+    }
+  });
+}
+
+function renderRateChart(){
+  var games = DB.games;
+  var pm2=0,pa2=0,pm3=0,pa3=0,ftm=0,fta=0;
+  games.forEach(function(g){ var st=g.stats||emptyStats(); pm2+=st.pm2;pa2+=st.pa2;pm3+=st.pm3;pa3+=st.pa3;ftm+=st.ftm;fta+=st.fta; });
+  var labels=['2P','3P','FT'];
+  var made  =[pm2, pm3, ftm];
+  var atmp  =[pa2, pa3, fta];
+  var pct   =labels.map(function(_,i){ return atmp[i]>0 ? Math.round(made[i]/atmp[i]*1000)/10 : 0; });
+  regChart('rateC',{
+    type:'bar',
+    data:{
+      labels:labels.map(function(l,i){ return l+' ('+made[i]+'/'+atmp[i]+')'; }),
+      datasets:[{
+        data:pct,
+        backgroundColor:['#3b82f6bb','#8b5cf6bb','#f59e0bbb'],
+        borderColor:['#3b82f6','#8b5cf6','#f59e0b'],
+        borderWidth:1, borderRadius:6
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{x:{},y:{beginAtZero:true,max:100,ticks:{callback:function(v){return v+'%';}}}},
+      animation:{duration:700}
+    }
+  });
+}
+
+function regChart(id, cfg){
+  if(chartReg[id]){ try{chartReg[id].destroy();}catch(e){} delete chartReg[id]; }
+  var el = document.getElementById(id); if(!el) return;
+  chartReg[id] = new Chart(el, cfg);
+}
+
+// ── ショットチャートパネル ──
+var schtSelGame = 'all';
+
+function renderShotPanel(){
+  var el = document.getElementById('apanel-shot');
+  var games = sortedGames();
+  if(!games.length){ el.innerHTML='<div class="no-data">試合データがありません</div>'; return; }
+
+  var gameBtns = '<div class="scht-sel-row">'
+    +'<button class="cbtn'+(schtSelGame==='all'?' active':'')+'" onclick="schtSelectGame(\'all\',this)">全試合</button>'
+    +games.map(function(gm){
+      return '<button class="cbtn'+(schtSelGame===gm.id?' active':'')+'" onclick="schtSelectGame(\''+gm.id+'\',this)">'+esc(gm.date.slice(5))+'</button>';
+    }).join('')
+    +'</div>';
+
+  el.innerHTML = '<div class="chart-card">'
+    +'<div class="chart-title">🎯 ショットチャート</div>'
+    +gameBtns
+    +'<div id="schtContent"></div>'
+    +'</div>';
+
+  renderShotChart();
+}
+
+function schtSelectGame(id, btn){
+  schtSelGame = id;
+  document.querySelectorAll('#apanel-shot .cbtn').forEach(function(b){b.classList.remove('active');});
+  if(btn) btn.classList.add('active');
+  renderShotChart();
+}
+
+function renderShotChart(){
+  var el = document.getElementById('schtContent');
+  if(!el) return;
+
+  var shots = [];
+  if(schtSelGame==='all'){
+    DB.games.forEach(function(g){ if(g.shots) shots = shots.concat(g.shots); });
+  } else {
+    var gm = DB.games.find(function(g){return g.id===schtSelGame;});
+    if(gm && gm.shots) shots = gm.shots;
+  }
+
+  var made  = shots.filter(function(s){return  s.made;}).length;
+  var total = shots.length;
+  var pct   = total ? Math.round(made/total*1000)/10 : 0;
+
+  var m2 = shots.filter(function(s){return s.type==='2P'&&s.made;}).length;
+  var a2 = shots.filter(function(s){return s.type==='2P';}).length;
+  var m3 = shots.filter(function(s){return s.type==='3P'&&s.made;}).length;
+  var a3 = shots.filter(function(s){return s.type==='3P';}).length;
+
+  var legendHtml = '<div class="scht-legend">'
+    +'<span style="display:flex;align-items:center;gap:4px"><svg width="12" height="12"><circle cx="6" cy="6" r="6" fill="#22c55e"/></svg>2P成功</span>'
+    +'<span style="display:flex;align-items:center;gap:4px"><span style="color:#ef4444;font-weight:bold;font-size:14px">✕</span>2P失敗</span>'
+    +'<span style="display:flex;align-items:center;gap:4px"><svg width="12" height="12"><circle cx="6" cy="6" r="6" fill="#3b82f6"/></svg>3P成功</span>'
+    +'<span style="display:flex;align-items:center;gap:4px"><span style="color:#f97316;font-weight:bold;font-size:14px">✕</span>3P失敗</span>'
+    +'</div>';
+
+  var pctHtml = total ? '<div class="scht-pct">'
+    +'FG: '+m2+'/'+a2+'（2P '+ps(m2,a2)+'）　3P: '+m3+'/'+a3+'（'+ps(m3,a3)+'）　合計: '+made+'/'+total+'（'+pct+'%）'
+    +'</div>' : '<div class="scht-pct">シュートデータなし</div>';
+
+  var svgHtml = '<div class="scht-wrap"><svg viewBox="0 0 300 270" xmlns="http://www.w3.org/2000/svg">'
+    +courtBaseSvg()
+    +shotDotsSvg(shots)
+    +'</svg></div>';
+
+  el.innerHTML = legendHtml + pctHtml + svgHtml;
+}
+
+// ── 成績表パネル ──
+function renderTablePanel(){
+  var el = document.getElementById('apanel-table');
+  var games = sortedGames();
+  if(!games.length){ el.innerHTML='<div class="no-data">データなし</div>'; return; }
+
+  // ── 先に累計を計算 ──
+  var totals = emptyStats(); var totPts = 0; var g = games.length;
+  games.forEach(function(gm){
+    var st = gm.stats||emptyStats();
+    totPts += calcPts(st);
+    ['pm2','pa2','pm3','pa3','ftm','fta','oreb','dreb','ast','stl','blk','tov','foul','min']
+      .forEach(function(k){ totals[k] += (st[k]||0); });
+  });
+
+  function avg(v){ return g>0 ? Math.round(v/g*10)/10 : 0; }
+  function pct2(m,a){ return a>0 ? (Math.round(m/a*1000)/10)+'%' : '–'; }
+
+  var fga   = totals.pa2 + totals.pa3;
+  var fgm   = totals.pm2 + totals.pm3;
+  var tsDen = 2*(fga + 0.44*totals.fta);
+  var ts    = tsDen>0 ? (Math.round(totPts/tsDen*1000)/10)+'%' : '–';
+
+  // ── ① 1試合平均カード ──
+  var html = '<div class="card">'
+    +'<div class="card-title">📊 1試合平均（'+g+'試合）</div>'
+    +'<div class="stbl-wrap"><table class="stbl">'
+    +'<thead><tr>'
+    +'<th>出場時間</th><th>得点</th>'
+    +'<th>FGA</th><th>FG%</th>'
+    +'<th>2PA</th><th>2P%</th>'
+    +'<th>3PA</th><th>3P%</th>'
+    +'<th>FTA</th><th>FT%</th>'
+    +'<th title="True Shooting %">TS%</th>'
+    +'</tr></thead><tbody><tr>'
+    +'<td>'+avg(totals.min)+'分</td>'
+    +'<td><b style="color:#1e40af;font-size:15px">'+avg(totPts)+'</b></td>'
+    +'<td>'+avg(fga)+'</td><td class="pct">'+pct2(fgm,fga)+'</td>'
+    +'<td>'+avg(totals.pa2)+'</td><td class="pct">'+pct2(totals.pm2,totals.pa2)+'</td>'
+    +'<td>'+avg(totals.pa3)+'</td><td class="pct">'+pct2(totals.pm3,totals.pa3)+'</td>'
+    +'<td>'+avg(totals.fta)+'</td><td class="pct">'+pct2(totals.ftm,totals.fta)+'</td>'
+    +'<td class="pct">'+ts+'</td>'
+    +'</tr></tbody></table></div>'
+    +'<div class="stbl-wrap" style="margin-top:6px"><table class="stbl">'
+    +'<thead><tr>'
+    +'<th>REB</th><th>OR</th><th>DR</th>'
+    +'<th>AST</th><th>STL</th><th>BLK</th><th>TOV</th><th>FOUL</th>'
+    +'</tr></thead><tbody><tr>'
+    +'<td>'+avg(totals.oreb+totals.dreb)+'</td>'
+    +'<td>'+avg(totals.oreb)+'</td><td>'+avg(totals.dreb)+'</td>'
+    +'<td>'+avg(totals.ast)+'</td><td>'+avg(totals.stl)+'</td>'
+    +'<td>'+avg(totals.blk)+'</td><td>'+avg(totals.tov)+'</td>'
+    +'<td>'+avg(totals.foul||0)+'</td>'
+    +'</tr></tbody></table></div>'
+    +'</div>';
+
+  // ── ② 試合ごとの詳細表 ──
+  html += '<div class="card"><div class="card-title">📋 試合別成績</div>'
+    +'<div class="stbl-wrap"><table class="stbl">'
+    +'<thead><tr>'
+    +'<th>日付</th><th>相手</th><th>結果</th><th>出場(分)</th><th>得点</th>'
+    +'<th>2P</th><th>2P%</th><th>3P</th><th>3P%</th><th>FT</th><th>FT%</th>'
+    +'<th>OR</th><th>DR</th><th>AST</th><th>STL</th><th>BLK</th><th>TOV</th><th>FOUL</th>'
+    +'</tr></thead><tbody>';
+
+  games.forEach(function(gm){
+    var st  = gm.stats||emptyStats();
+    var pts = calcPts(st);
+    var bc  = {Win:'color:#166534',Lose:'color:#991B1B',Draw:'color:#854D0E'}[gm.result]||'';
+    html += '<tr>'
+      +'<td>'+esc(gm.date)+'</td>'
+      +'<td>'+esc(gm.opp)+'</td>'
+      +'<td style="'+bc+'">'+esc(gm.result)+'</td>'
+      +'<td>'+((st.min||0)>0?st.min+'分':'–')+'</td>'
+      +'<td><b>'+pts+'</b></td>'
+      +'<td>'+st.pm2+'/'+st.pa2+'</td><td class="pct">'+ps(st.pm2,st.pa2)+'</td>'
+      +'<td>'+st.pm3+'/'+st.pa3+'</td><td class="pct">'+ps(st.pm3,st.pa3)+'</td>'
+      +'<td>'+st.ftm+'/'+st.fta+'</td><td class="pct">'+ps(st.ftm,st.fta)+'</td>'
+      +'<td>'+st.oreb+'</td><td>'+st.dreb+'</td>'
+      +'<td>'+st.ast+'</td><td>'+st.stl+'</td><td>'+st.blk+'</td>'
+      +'<td>'+st.tov+'</td><td>'+(st.foul||0)+'</td>'
+      +'</tr>';
+  });
+
+  // 合計行
+  html += '<tr style="background:#EDF1F7;font-weight:bold">'
+    +'<td colspan="3">合計</td>'
+    +'<td>'+(totals.min||0)+'分</td>'
+    +'<td>'+totPts+'</td>'
+    +'<td>'+totals.pm2+'/'+totals.pa2+'</td><td class="pct">'+ps(totals.pm2,totals.pa2)+'</td>'
+    +'<td>'+totals.pm3+'/'+totals.pa3+'</td><td class="pct">'+ps(totals.pm3,totals.pa3)+'</td>'
+    +'<td>'+totals.ftm+'/'+totals.fta+'</td><td class="pct">'+ps(totals.ftm,totals.fta)+'</td>'
+    +'<td>'+totals.oreb+'</td><td>'+totals.dreb+'</td>'
+    +'<td>'+totals.ast+'</td><td>'+totals.stl+'</td><td>'+totals.blk+'</td>'
+    +'<td>'+totals.tov+'</td><td>'+(totals.foul||0)+'</td>'
+    +'</tr>';
+
+  html += '</tbody></table></div></div>';
+  el.innerHTML = html;
+}
+
+// ════════════════════════════════════════
+// 略語注釈
+// ════════════════════════════════════════
+// ════════════════════════════════════════
+// 設定
+// ════════════════════════════════════════
+function renderSettings(){
+  document.getElementById('cfgName').value = DB.config.playerName||'';
+}
+function saveConfig(){
+  DB.config.playerName = document.getElementById('cfgName').value.trim();
+  saveDB(); updateAppHeader(); alert('設定を保存しました！');
+}
+
+// ════════════════════════════════════════
+// 分析レポート HTML生成（JS不要・details/summary折りたたみ）
+// ════════════════════════════════════════
+function buildReportLegend(){
+  var items = [
+    ['2P','2ポイントシュート'],['3P','3ポイントシュート'],
+    ['FT','フリースロー'],['FG','フィールドゴール（2P＋3P）'],
+    ['FGA','フィールドゴール試投数'],['FG%','フィールドゴール成功率'],
+    ['2PA','2P試投数'],['2P%','2P成功率'],
+    ['3PA','3P試投数'],['3P%','3P成功率'],
+    ['FTA','フリースロー試投数'],['FT%','フリースロー成功率'],
+    ['TS%','総合シュート効率（得点÷(2×(FGA+0.44×FTA))×100）'],
+    ['REB','リバウンド（OR＋DR）'],
+    ['OR','オフェンスリバウンド'],['DR','ディフェンスリバウンド'],
+    ['AST','アシスト'],['STL','スティール'],
+    ['BLK','ブロック'],['TOV','ターンオーバー'],['FOUL','ファール'],
+  ];
+  return '<div class="abbrv">'
+    +'<div class="abbrv-tit">略語一覧</div>'
+    +'<div class="abbrv-grid">'
+    +items.map(function(i){
+      return '<span><b>'+i[0]+'</b>　'+i[1]+'</span>';
+    }).join('')
+    +'</div></div>';
+}
+
+function generateHtml(){
+  var games = sortedGames().reverse(); // 時系列順
+  if(!games.length){ alert('試合データがありません'); return; }
+
+  var playerName = DB.config.playerName||'プレイヤー';
+  var now   = new Date();
+  var genDt = now.getFullYear()+'/'+pad(now.getMonth()+1)+'/'+pad(now.getDate())
+             +' '+pad(now.getHours())+':'+pad(now.getMinutes());
+
+  // ── 集計 ──
+  var totals = emptyStats(); var totPts=0; var g=games.length;
+  var w=0,l=0;
+  games.forEach(function(gm){
+    var st=gm.stats||emptyStats();
+    totPts+=calcPts(st);
+    if(gm.result==='Win') w++; else if(gm.result==='Lose') l++;
+    ['pm2','pa2','pm3','pa3','ftm','fta','oreb','dreb','ast','stl','blk','tov','foul','min']
+      .forEach(function(k){ totals[k]+=(st[k]||0); });
+  });
+  var fga = totals.pa2+totals.pa3;
+  var fgm = totals.pm2+totals.pm3;
+  var tsDen = 2*(fga+0.44*totals.fta);
+  var ts  = tsDen>0 ? Math.round(totPts/tsDen*1000)/10 : null;
+  var wr  = (w+l)>0 ? Math.round(w/(w+l)*1000)/10 : 0;
+
+  function avg(v){ return g>0?Math.round(v/g*10)/10:0; }
+  function pStr(m,a){ return a>0?(Math.round(m/a*1000)/10)+'%':'–'; }
+  function pNum(m,a){ return a>0?Math.round(m/a*1000)/10:0; }
+
+  // ── シュートチャート SVG ──
+  var allShots=[]; games.forEach(function(gm){if(gm.shots)allShots=allShots.concat(gm.shots);});
+  var sm=allShots.filter(function(s){return s.made;}).length;
+  var sa=allShots.length;
+  var m2s=allShots.filter(function(s){return s.type==='2P'&&s.made;}).length;
+  var a2s=allShots.filter(function(s){return s.type==='2P';}).length;
+  var m3s=allShots.filter(function(s){return s.type==='3P'&&s.made;}).length;
+  var a3s=allShots.filter(function(s){return s.type==='3P';}).length;
+  var schtSvg='<svg viewBox="0 0 300 270" xmlns="http://www.w3.org/2000/svg" class="court-svg">'
+    +courtBaseSvg()+shotDotsSvg(allShots)+'</svg>';
+
+  // ── CSS（インライン、JS不要） ──
+  var css=[
+    '*{box-sizing:border-box;margin:0;padding:0}',
+    'body{font-family:-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;background:#EEF2FF;color:#1e293b;padding-bottom:24px}',
+    '.hdr{background:linear-gradient(135deg,#1e40af,#3b82f6);color:#fff;padding:14px 16px;text-align:center}',
+    '.hdr h1{font-size:18px;font-weight:bold}',
+    '.hdr p{font-size:12px;opacity:.8;margin-top:3px}',
+    '.wrap{padding:10px;display:flex;flex-direction:column;gap:8px}',
+    /* サマリーチップ */
+    '.chips{display:flex;gap:7px;flex-wrap:wrap}',
+    '.chip{flex:1;min-width:56px;background:#fff;border-radius:12px;padding:9px 6px;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,.07)}',
+    '.cv{font-size:17px;font-weight:bold;color:#1e40af;line-height:1.1}',
+    '.cl{font-size:10px;color:#94A3B8;margin-top:2px;font-weight:bold}',
+    /* アコーディオン */
+    'details{background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.07)}',
+    'details>summary{padding:13px 16px;cursor:pointer;list-style:none;font-size:14px;font-weight:bold;display:flex;align-items:center;justify-content:space-between;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}',
+    'details>summary::-webkit-details-marker{display:none}',
+    'details>summary::after{content:"▼";font-size:10px;color:#94A3B8;margin-left:8px;flex-shrink:0;transition:transform .2s}',
+    'details[open]>summary::after{transform:rotate(180deg)}',
+    'details[open]>summary{border-bottom:1px solid #E2E8F0}',
+    '.sbody{padding:10px;background:#F8FAFF;display:flex;flex-direction:column;gap:8px}',
+    '.sub{background:#fff;border-radius:10px;padding:12px;box-shadow:0 1px 4px rgba(0,0,0,.06)}',
+    '.stit{font-size:12px;font-weight:bold;color:#475569;margin-bottom:8px}',
+    /* テーブル */
+    '.tw{overflow-x:auto;-webkit-overflow-scrolling:touch}',
+    'table{width:100%;border-collapse:collapse;font-size:12px;min-width:400px}',
+    'th{background:#EDF1F7;padding:6px 5px;font-size:11px;color:#555;text-align:center;white-space:nowrap;border-bottom:1px solid #ddd}',
+    'td{padding:6px 5px;text-align:center;border-bottom:1px solid #eee;white-space:nowrap;color:#334155}',
+    '.pc{color:#1a5fb4}',
+    '.tr{background:#EDF1F7!important;font-weight:bold}',
+    /* CSSバーチャート */
+    '.bars{display:flex;flex-direction:column;gap:9px}',
+    '.brow{display:flex;align-items:center;gap:8px}',
+    '.blbl{width:36px;font-size:12px;font-weight:bold;color:#374151;text-align:right;flex-shrink:0}',
+    '.btrk{flex:1;background:#F1F5F9;border-radius:999px;height:22px;overflow:hidden}',
+    '.bfil{height:100%;border-radius:999px}',
+    '.b1{background:linear-gradient(90deg,#2563EB,#60A5FA)}',
+    '.b2{background:linear-gradient(90deg,#7C3AED,#A78BFA)}',
+    '.b3{background:linear-gradient(90deg,#D97706,#FCD34D)}',
+    '.b4{background:linear-gradient(90deg,#16A34A,#4ADE80)}',
+    '.bval{width:110px;font-size:12px;color:#64748B;flex-shrink:0}',
+    /* シュートチャート */
+    '.court-svg{width:100%;max-width:400px;height:auto;display:block;margin:0 auto;border-radius:8px}',
+    '.sleg{display:flex;gap:14px;font-size:12px;color:#64748B;padding:4px 0 8px}',
+    '.ssts{font-size:13px;font-weight:bold;color:#374151;margin-bottom:6px}',
+    '.note{font-size:11px;color:#94A3B8;margin-top:6px}',
+    /* 推移テーブル補助 */
+    '.wintd{color:#166534;font-weight:bold}.losetd{color:#991B1B;font-weight:bold}.drawtd{color:#854D0E;font-weight:bold}',
+    /* 略語注釈 */
+    '.abbrv{background:#fff;border-radius:12px;padding:12px 14px;box-shadow:0 2px 6px rgba(0,0,0,.07);font-size:11px;color:#64748B;line-height:1.85}',
+    '.abbrv-tit{font-size:12px;font-weight:bold;color:#374151;margin-bottom:6px}',
+    '.abbrv-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}',
+    '.abbrv-grid span b{color:#1e40af;font-family:monospace;font-size:11.5px}',
+  ].join('');
+
+  // ── ① 1試合平均テーブル ──
+  var secAvg='<div class="sub"><div class="tw"><table>'
+    +'<thead><tr>'
+    +'<th>得点</th><th>FGA</th><th>FG%</th><th>2PA</th><th>2P%</th><th>3PA</th><th>3P%</th>'
+    +'<th>FTA</th><th>FT%</th><th title="True Shooting %">TS%</th>'
+    +'</tr></thead><tbody><tr>'
+    +'<td><b style="color:#1e40af;font-size:14px">'+avg(totPts)+'</b></td>'
+    +'<td>'+avg(fga)+'</td><td class="pc">'+pStr(fgm,fga)+'</td>'
+    +'<td>'+avg(totals.pa2)+'</td><td class="pc">'+pStr(totals.pm2,totals.pa2)+'</td>'
+    +'<td>'+avg(totals.pa3)+'</td><td class="pc">'+pStr(totals.pm3,totals.pa3)+'</td>'
+    +'<td>'+avg(totals.fta)+'</td><td class="pc">'+pStr(totals.ftm,totals.fta)+'</td>'
+    +'<td class="pc">'+(ts!==null?ts+'%':'–')+'</td>'
+    +'</tr></tbody></table></div>'
+    +'<div class="tw" style="margin-top:6px"><table>'
+    +'<thead><tr>'
+    +'<th>REB</th><th>OR</th><th>DR</th><th>AST</th><th>STL</th><th>BLK</th><th>TOV</th><th>FOUL</th>'
+    +'</tr></thead><tbody><tr>'
+    +'<td>'+avg(totals.oreb+totals.dreb)+'</td>'
+    +'<td>'+avg(totals.oreb)+'</td><td>'+avg(totals.dreb)+'</td>'
+    +'<td>'+avg(totals.ast)+'</td><td>'+avg(totals.stl)+'</td><td>'+avg(totals.blk)+'</td>'
+    +'<td>'+avg(totals.tov)+'</td><td>'+avg(totals.foul||0)+'</td>'
+    +'</tr></tbody></table></div>'
+    +'<p class="note">TS% = 得点 ÷ ( 2 × ( FGA + 0.44 × FTA ) ) × 100</p>'
+    +'</div>';
+
+  // ── ② シュート成功率バーチャート ──
+  var barData=[
+    {l:'FG%', v:pNum(fgm,fga),              t:pStr(fgm,fga)+' ('+fgm+'/'+fga+')',                    c:'b1'},
+    {l:'2P%', v:pNum(totals.pm2,totals.pa2),t:pStr(totals.pm2,totals.pa2)+' ('+totals.pm2+'/'+totals.pa2+')', c:'b1'},
+    {l:'3P%', v:pNum(totals.pm3,totals.pa3),t:pStr(totals.pm3,totals.pa3)+' ('+totals.pm3+'/'+totals.pa3+')', c:'b2'},
+    {l:'FT%', v:pNum(totals.ftm,totals.fta),t:pStr(totals.ftm,totals.fta)+' ('+totals.ftm+'/'+totals.fta+')', c:'b3'},
+    {l:'TS%', v:ts||0,                       t:(ts!==null?ts+'%':'–'),                                  c:'b4'},
+  ];
+  var secBar='<div class="sub"><div class="bars">';
+  barData.forEach(function(b){
+    secBar+='<div class="brow">'
+      +'<div class="blbl">'+esc(b.l)+'</div>'
+      +'<div class="btrk"><div class="bfil '+b.c+'" style="width:'+Math.min(b.v,100).toFixed(1)+'%"></div></div>'
+      +'<div class="bval">'+esc(b.t)+'</div>'
+      +'</div>';
+  });
+  secBar+='</div></div>';
+
+  // ── ③ シュートチャート ──
+  var secShot=sa>0
+    ? '<div class="sub">'
+      +'<div class="ssts">FG: '+m2s+'/'+a2s+' (2P '+pStr(m2s,a2s)+'）　'
+      +'3P: '+m3s+'/'+a3s+' ('+pStr(m3s,a3s)+'）　合計: '+sm+'/'+sa+' ('+pStr(sm,sa)+'）</div>'
+      +'<div class="sleg">'
+      +'<span style="display:flex;align-items:center;gap:4px"><svg width="11" height="11"><circle cx="5.5" cy="5.5" r="5.5" fill="#22c55e"/></svg>2P成功</span>'
+      +'<span style="display:flex;align-items:center;gap:4px"><span style="color:#ef4444;font-weight:bold">✕</span>2P失敗</span>'
+      +'<span style="display:flex;align-items:center;gap:4px"><svg width="11" height="11"><circle cx="5.5" cy="5.5" r="5.5" fill="#3b82f6"/></svg>3P成功</span>'
+      +'<span style="display:flex;align-items:center;gap:4px"><span style="color:#f97316;font-weight:bold">✕</span>3P失敗</span>'
+      +'</div>'
+      +schtSvg+'</div>'
+    : '<div class="sub" style="text-align:center;color:#94A3B8;padding:20px">'
+      +'シュートチャートデータなし<br><small>コート画面でタップ記録した場合のみ表示されます</small></div>';
+
+  // ── ④ 試合別成績テーブル ──
+  var secGames='<div class="sub"><div class="tw"><table>'
+    +'<thead><tr>'
+    +'<th>日付</th><th>相手</th><th>勝敗</th><th>得点</th>'
+    +'<th>2P</th><th>2P%</th><th>3P</th><th>3P%</th><th>FT</th><th>FT%</th>'
+    +'<th>OR</th><th>DR</th><th>AST</th><th>STL</th><th>BLK</th><th>TOV</th><th>FOUL</th>'
+    +'</tr></thead><tbody>';
+  games.forEach(function(gm){
+    var st=gm.stats||emptyStats(), pts=calcPts(st);
+    var rc={Win:'wintd',Lose:'losetd',Draw:'drawtd'}[gm.result]||'';
+    secGames+='<tr>'
+      +'<td>'+esc(gm.date)+'</td><td>'+esc(gm.opp)+'</td>'
+      +'<td class="'+rc+'">'+esc(gm.result)+'</td>'
+      +'<td><b>'+pts+'</b></td>'
+      +'<td>'+st.pm2+'/'+st.pa2+'</td><td class="pc">'+pStr(st.pm2,st.pa2)+'</td>'
+      +'<td>'+st.pm3+'/'+st.pa3+'</td><td class="pc">'+pStr(st.pm3,st.pa3)+'</td>'
+      +'<td>'+st.ftm+'/'+st.fta+'</td><td class="pc">'+pStr(st.ftm,st.fta)+'</td>'
+      +'<td>'+st.oreb+'</td><td>'+st.dreb+'</td>'
+      +'<td>'+st.ast+'</td><td>'+st.stl+'</td><td>'+st.blk+'</td>'
+      +'<td>'+st.tov+'</td><td>'+(st.foul||0)+'</td></tr>';
+  });
+  secGames+='<tr class="tr">'
+    +'<td colspan="3">合計（'+g+'試合）</td><td>'+totPts+'</td>'
+    +'<td>'+totals.pm2+'/'+totals.pa2+'</td><td class="pc">'+pStr(totals.pm2,totals.pa2)+'</td>'
+    +'<td>'+totals.pm3+'/'+totals.pa3+'</td><td class="pc">'+pStr(totals.pm3,totals.pa3)+'</td>'
+    +'<td>'+totals.ftm+'/'+totals.fta+'</td><td class="pc">'+pStr(totals.ftm,totals.fta)+'</td>'
+    +'<td>'+totals.oreb+'</td><td>'+totals.dreb+'</td>'
+    +'<td>'+totals.ast+'</td><td>'+totals.stl+'</td><td>'+totals.blk+'</td>'
+    +'<td>'+totals.tov+'</td><td>'+(totals.foul||0)+'</td></tr>'
+    +'</tbody></table></div></div>';
+
+  // ── チーム成績セクション ──
+  var secRecord='<div class="sub"><div class="chips">'
+    +'<div class="chip"><div class="cv">'+g+'</div><div class="cl">試合数</div></div>'
+    +'<div class="chip"><div class="cv">'+w+'</div><div class="cl">勝</div></div>'
+    +'<div class="chip"><div class="cv">'+l+'</div><div class="cl">敗</div></div>'
+    +'<div class="chip"><div class="cv">'+wr+'%</div><div class="cl">勝率</div></div>'
+    +'</div></div>';
+
+  // ── HTML組み立て ──
+  var html='<!DOCTYPE html>\n<html lang="ja">\n<head>\n'
+    +'<meta charset="UTF-8">\n'
+    +'<meta name="viewport" content="width=device-width,initial-scale=1.0">\n'
+    +'<title>'+esc(playerName)+' スタッツレポート</title>\n'
+    +'<style>'+css+'</style>\n'
+    +'</head>\n<body>\n'
+    +'<div class="hdr"><h1>'+esc(playerName)+' スタッツレポート</h1>'
+    +'<p>'+genDt+' 作成</p></div>\n'
+    +'<div class="wrap">\n'
+    +'<details open><summary>🏆 チーム成績</summary>'
+    +'<div class="sbody">'+secRecord+'</div></details>\n'
+    +'<details open><summary>📊 1試合平均</summary>'
+    +'<div class="sbody">'+secAvg+'</div></details>\n'
+    +'<details><summary>📈 シュート成功率</summary>'
+    +'<div class="sbody">'+secBar+'</div></details>\n'
+    +'<details><summary>🎯 シュートチャート（全試合）</summary>'
+    +'<div class="sbody">'+secShot+'</div></details>\n'
+    +'<details><summary>📋 試合別成績</summary>'
+    +'<div class="sbody">'+secGames+'</div></details>\n'
+    +buildReportLegend()
+    +'</div>\n</body>\n</html>';
+
+  dl(new Blob([html],{type:'text/html;charset=utf-8'}),
+    (playerName||'stats')+'_レポート_'+todayStr()+'.html');
+}
+
+// ════════════════════════════════════════
+// バックアップ・復元
+// ════════════════════════════════════════
+function exportJson(){
+  var blob = new Blob([JSON.stringify(DB,null,2)],{type:'application/json'});
+  dl(blob,(DB.config.playerName||'player')+'_stats_'+todayStr()+'.json');
+}
+function importJson(input){
+  var f = input.files[0]; if(!f) return;
+  var reader = new FileReader();
+  reader.onload = function(e){
+    try{
+      var data = JSON.parse(e.target.result);
+      if(!data.games) throw new Error('データ形式が不正です');
+      if(!confirm('現在のデータを上書きしますか？')) return;
+      DB = data;
+      DB.games.forEach(function(g){ if(!g.shots) g.shots=[]; if(!g.stats) g.stats=emptyStats(); });
+      saveDB();
+      Object.keys(chartReg).forEach(function(k){try{chartReg[k].destroy();}catch(e){}});
+      chartReg = {};
+      alert('読み込みました！');
+      showView('home');
+    }catch(err){ alert('エラー: '+err.message); }
+  };
+  reader.readAsText(f);
+  input.value = '';
+}
+function clearData(){
+  if(!confirm('全試合データを削除します。よいですか？')) return;
+  DB.games = [];
+  saveDB();
+  Object.keys(chartReg).forEach(function(k){try{chartReg[k].destroy();}catch(e){}});
+  chartReg = {};
+  renderHome();
+}
+
+// ════════════════════════════════════════
+// 共通ヘルパー
+// ════════════════════════════════════════
+function sortedGames(){
+  return DB.games
+    .map(function(g,i){ return {g:g, i:i}; })
+    .sort(function(a,b){
+      var da=new Date(a.g.date.replace(/\//g,'-')).getTime()||0;
+      var db=new Date(b.g.date.replace(/\//g,'-')).getTime()||0;
+      if(db!==da) return db-da;  // 日付降順（新しい日付が上）
+      return b.i - a.i;          // 同日: DB配列逆順（後から追加した試合が上）
+    })
+    .map(function(x){ return x.g; });
+}
+function ps(m,a){ return a>0 ? (Math.round(m/a*1000)/10)+'%' : '–'; }
+function esc(t){ return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function todayStr(){ var d=new Date(); return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+function pad(n){ return n<10 ? '0'+n : String(n); }
+function dl(blob,name){ var url=URL.createObjectURL(blob); var a=document.createElement('a'); a.href=url; a.download=name; a.click(); URL.revokeObjectURL(url); }
+function openM(id){ document.getElementById(id).classList.add('open'); document.body.style.overflow='hidden'; }
+function closeM(id){ document.getElementById(id).classList.remove('open'); document.body.style.overflow=''; }
+function flashEl(el, isRed){
+  var cls = isRed ? 'flash-r' : 'flash-g';
+  el.classList.remove('flash-g','flash-r');
+  void el.offsetWidth;
+  el.classList.add(cls);
+  setTimeout(function(){ el.classList.remove(cls); }, 300);
+}
+
+document.querySelectorAll('.modal-ov').forEach(function(ov){
+  ov.addEventListener('click', function(e){ if(e.target===ov) closeM(ov.id); });
+});
+
+// ════════════════════════════════════════
+// 初期化
+// ════════════════════════════════════════
+loadDB();
+updateAppHeader();
+renderHome();
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js');
+}
+</script>
+</body>
+</html>
